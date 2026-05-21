@@ -1,0 +1,42 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Mistral Test App (dev)",
+			"type": "shell",
+			"command": "C:\\Program Files\\nodejs\\npm.cmd",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Run Mistral Test App (dev, fixed PATH)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"$env:Path='C:\\Program Files\\nodejs;'+$env:Path; & 'C:\\Program Files\\nodejs\\npm.cmd' run dev"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Run Mistral Test App (dev direct node)",
+			"type": "shell",
+			"command": "C:\\Program Files\\nodejs\\node.exe",
+			"args": [
+				"node_modules/tsx/dist/cli.mjs",
+				"watch",
+				"src/server.ts"
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}

@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Voice Chat Tester</title>
+    <style>
+      :root {
+        --bg: radial-gradient(circle at 10% 20%, #f7efe2 0%, #f0dfc8 35%, #d7c4ad 100%);
+        --ink: #2b241f;
+        --panel: rgba(255, 251, 244, 0.78);
+        --accent: #b84f2c;
+        --accent-2: #1d4f47;
+        --border: rgba(72, 56, 44, 0.2);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Georgia", "Times New Roman", serif;
+        color: var(--ink);
+        background: var(--bg);
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+      }
+
+      .wrap {
+        width: min(920px, 100%);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: var(--panel);
+        backdrop-filter: blur(8px);
+        padding: clamp(1rem, 2.3vw, 2rem);
+        box-shadow: 0 18px 45px rgba(57, 38, 24, 0.2);
+        animation: rise 0.6s ease-out;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      @media (min-width: 980px) {
+        .layout {
+          grid-template-columns: 340px 1fr;
+          align-items: start;
+        }
+      }
+
+      .section {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.38);
+        padding: 0.9rem;
+      }
+
+      .section h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .subsection {
+        margin-top: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.36);
+        padding: 0.75rem;
+      }
+
+      .subsection h3 {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: clamp(1.5rem, 4vw, 2.4rem);
+        letter-spacing: 0.02em;
+      }
+
+      p {
+        margin: 0 0 1rem;
+      }
+
+      label {
+        display: block;
+        font-size: 0.92rem;
+        margin: 0.8rem 0 0.4rem;
+      }
+
+      textarea,
+      select,
+      input,
+      button {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 0.75rem 0.9rem;
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+      }
+
+      @media (min-width: 720px) {
+        .row {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      button {
+        margin-top: 1rem;
+        border: none;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #fff8ef;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      pre {
+        margin: 1rem 0 0;
+        white-space: pre-wrap;
+        background: rgba(255, 255, 255, 0.58);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.9rem;
+        min-height: 130px;
+      }
+
+      .chatlog {
+        margin-top: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.46);
+        min-height: 180px;
+        max-height: 320px;
+        overflow: auto;
+        padding: 0.8rem;
+      }
+
+      .bubble {
+        border-radius: 10px;
+        padding: 0.65rem 0.75rem;
+        margin-bottom: 0.6rem;
+        white-space: pre-wrap;
+      }
+
+      .bubble.user {
+        background: rgba(184, 79, 44, 0.16);
+      }
+
+      .bubble.assistant {
+        background: rgba(29, 79, 71, 0.16);
+      }
+
+      .meta {
+        display: block;
+        font-size: 0.74rem;
+        opacity: 0.72;
+        margin-bottom: 0.2rem;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+      }
+
+      @media (min-width: 720px) {
+        .actions {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      #clearButton {
+        background: linear-gradient(120deg, #5e4434, #8b6a4f);
+      }
+
+      .status {
+        font-size: 0.9rem;
+        margin-top: 0.8rem;
+        color: #4b3d32;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.99);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Chatty</h1>
+      <p>Chat with Mistral or Claude and hear responses through ElevenLabs voice.</p>
+
+      <div class="layout">
+        <section class="section">
+          <h2>Settings</h2>
+
+          <div class="subsection">
+            <h3>AI Settings</h3>
+
+            <label for="provider">Provider</label>
+            <select id="provider">
+              <option value="mistral" selected>Mistral</option>
+              <option value="claude">Claude</option>
+            </select>
+
+            <div class="row">
+              <div>
+                <label for="modelSelect">Model</label>
+                <select id="modelSelect"></select>
+              </div>
+              <div>
+                <label for="customModel">Custom Model (optional override)</label>
+                <input id="customModel" placeholder="Leave empty to use selected model" />
+              </div>
+            </div>
+
+            <label for="systemPrompt">System prompt (optional)</label>
+            <textarea id="systemPrompt" placeholder="You are a concise assistant."></textarea>
+
+            <label for="temperature">Temperature</label>
+            <input id="temperature" type="number" min="0" max="1" step="0.1" value="0.7" />
+          </div>
+
+          <div class="subsection">
+            <h3>ElevenLabs Settings</h3>
+
+            <label for="voiceSelect">Voice</label>
+            <select id="voiceSelect">
+              <option value="">Loading voices...</option>
+            </select>
+
+            <label for="voiceModelId">Voice Model ID (optional)</label>
+            <input id="voiceModelId" placeholder="eleven_multilingual_v2" />
+
+            <label for="voiceId">Manual Voice ID Override (optional)</label>
+            <input id="voiceId" placeholder="If set, this overrides the dropdown" />
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Conversation</h2>
+
+          <label for="message">Message</label>
+          <textarea id="message" placeholder="Write your prompt here..."></textarea>
+
+          <div class="actions">
+            <button id="sendButton" type="button">Send</button>
+            <button id="clearButton" type="button">Clear Conversation</button>
+          </div>
+          <div id="status" class="status">Idle</div>
+          <div id="chatlog" class="chatlog"></div>
+          <audio id="audioPlayer" controls style="width: 100%; margin-top: 1rem"></audio>
+          <pre id="output">Debug output will appear here.</pre>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const sendButton = document.getElementById("sendButton");
+      const clearButton = document.getElementById("clearButton");
+      const statusNode = document.getElementById("status");
+      const outputNode = document.getElementById("output");
+      const audioPlayer = document.getElementById("audioPlayer");
+      const voiceSelect = document.getElementById("voiceSelect");
+      const chatlogNode = document.getElementById("chatlog");
+      const providerNode = document.getElementById("provider");
+      const modelSelectNode = document.getElementById("modelSelect");
+      const customModelNode = document.getElementById("customModel");
+      let currentAudioUrl = null;
+      const conversation = [];
+
+      const providerModels = {
+        mistral: ["mistral-small-latest", "mistral-medium-latest", "mistral-large-latest"],
+        claude: ["claude-3-5-haiku-latest", "claude-3-5-sonnet-latest", "claude-3-7-sonnet-latest"]
+      };
+
+      const parseResponseBody = async response => {
+        const raw = await response.text();
+        if (!raw) {
+          return {};
+        }
+
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return { raw };
+        }
+      };
+
+      const loadVoices = async () => {
+        voiceSelect.innerHTML = '<option value="">Loading voices...</option>';
+        try {
+          const response = await fetch("/api/voices");
+          const data = await parseResponseBody(response);
+
+          if (!response.ok) {
+            const debugDetails = data.debug ? `\n\n${JSON.stringify(data.debug, null, 2)}` : "";
+            throw new Error((data.error || "Failed to load voices") + debugDetails);
+          }
+
+          const voices = Array.isArray(data.voices) ? data.voices : [];
+          voiceSelect.innerHTML = "";
+
+          if (!voices.length) {
+            voiceSelect.innerHTML = '<option value="">No voices found</option>';
+            return;
+          }
+
+          for (const voice of voices) {
+            const option = document.createElement("option");
+            option.value = voice.id;
+            option.textContent = `${voice.name} (${voice.category})`;
+            if (voice.id === data.defaultVoiceId) {
+              option.selected = true;
+            }
+            voiceSelect.appendChild(option);
+          }
+        } catch (error) {
+          voiceSelect.innerHTML = '<option value="">Failed to load voices</option>';
+          outputNode.textContent = error.message || "Failed to load voices.";
+          statusNode.textContent = "Voice list error";
+        }
+      };
+
+      const renderConversation = () => {
+        if (!conversation.length) {
+          chatlogNode.textContent = "No conversation yet. Send your first message.";
+          return;
+        }
+
+        chatlogNode.innerHTML = "";
+        for (const turn of conversation) {
+          const bubble = document.createElement("div");
+          bubble.className = `bubble ${turn.role}`;
+
+          const meta = document.createElement("span");
+          meta.className = "meta";
+          meta.textContent = turn.role === "user" ? "You" : "Assistant";
+
+          const content = document.createElement("div");
+          content.textContent = turn.content;
+
+          bubble.appendChild(meta);
+          bubble.appendChild(content);
+          chatlogNode.appendChild(bubble);
+        }
+
+        chatlogNode.scrollTop = chatlogNode.scrollHeight;
+      };
+
+      loadVoices();
+      renderConversation();
+
+      const syncModels = () => {
+        const provider = providerNode.value === "claude" ? "claude" : "mistral";
+        const models = providerModels[provider];
+        modelSelectNode.innerHTML = "";
+        for (const model of models) {
+          const option = document.createElement("option");
+          option.value = model;
+          option.textContent = model;
+          modelSelectNode.appendChild(option);
+        }
+        customModelNode.placeholder = `Leave empty to use ${models[0]}`;
+      };
+
+      syncModels();
+      providerNode.addEventListener("change", syncModels);
+
+      clearButton.addEventListener("click", () => {
+        conversation.length = 0;
+        renderConversation();
+        outputNode.textContent = "Debug output will appear here.";
+        statusNode.textContent = "Conversation cleared";
+      });
+
+      sendButton.addEventListener("click", async () => {
+        const systemPrompt = document.getElementById("systemPrompt").value;
+        const message = document.getElementById("message").value;
+        const provider = providerNode.value === "claude" ? "claude" : "mistral";
+        const model = customModelNode.value.trim() || modelSelectNode.value;
+        const temperature = Number(document.getElementById("temperature").value);
+        const voiceId = document.getElementById("voiceId").value || voiceSelect.value;
+        const voiceModelId = document.getElementById("voiceModelId").value;
+
+        if (!message.trim()) {
+          outputNode.textContent = "Please enter a message.";
+          return;
+        }
+
+        const userMessage = message.trim();
+        conversation.push({ role: "user", content: userMessage });
+        renderConversation();
+
+        if (currentAudioUrl) {
+          URL.revokeObjectURL(currentAudioUrl);
+          currentAudioUrl = null;
+        }
+
+        audioPlayer.removeAttribute("src");
+        audioPlayer.load();
+        statusNode.textContent = "Sending request...";
+        outputNode.textContent = "Waiting for response...";
+
+        try {
+          const chatResponse = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              provider,
+              model,
+              temperature,
+              messages: [
+                ...(systemPrompt.trim() ? [{ role: "system", content: systemPrompt.trim() }] : []),
+                ...conversation
+              ]
+            })
+          });
+
+          const chatData = await parseResponseBody(chatResponse);
+          if (!chatResponse.ok) {
+            const debugDetails = chatData.debug ? `\n\n${JSON.stringify(chatData.debug, null, 2)}` : "";
+            throw new Error((chatData.error || "Request failed") + debugDetails);
+          }
+
+          const assistantText = chatData.content || "";
+          if (!assistantText) {
+            throw new Error("Chat API returned no content to convert to voice.");
+          }
+
+          conversation.push({ role: "assistant", content: assistantText });
+          renderConversation();
+
+          outputNode.textContent = "Response received and added to conversation.";
+          statusNode.textContent = "Generating voice...";
+
+          const voiceResponse = await fetch("/api/voice", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              text: assistantText,
+              voiceId,
+              modelId: voiceModelId
+            })
+          });
+
+          if (!voiceResponse.ok) {
+            const voiceError = await parseResponseBody(voiceResponse);
+            const debugDetails = voiceError.debug ? `\n\n${JSON.stringify(voiceError.debug, null, 2)}` : "";
+            throw new Error((voiceError.error || "Voice generation failed") + debugDetails);
+          }
+
+          const audioBlob = await voiceResponse.blob();
+          currentAudioUrl = URL.createObjectURL(audioBlob);
+          audioPlayer.src = currentAudioUrl;
+          await audioPlayer.play();
+
+          statusNode.textContent = "Done - playing voice response";
+          document.getElementById("message").value = "";
+        } catch (error) {
+          if (conversation[conversation.length - 1]?.role === "user" && conversation[conversation.length - 1]?.content === userMessage) {
+            conversation.pop();
+            renderConversation();
+          }
+          outputNode.textContent = error.message || "Unknown error";
+          statusNode.textContent = "Error";
+        }
+      });
+    </script>
+  </body>
+</html>
